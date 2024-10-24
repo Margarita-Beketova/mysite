@@ -1,0 +1,176 @@
+                                                                MTV - pattern  
+
+    Model - defines data structure and is data handler between the db and the view
+
+    Template - The presentation level
+
+    View - communicates with db via model and transfers data to the template. 
+
+    Django acts as a controller. It sends a request to the view according to URL-config
+
+                                                            Request/response cycle
+
+1. Browser requests a page by url and server passes HTTP request to Django.
+2. Django looks for the first urlpattern that matches.
+3. Django executes the view corresponded with URL.
+4. The view uses data models to get info fromn db.
+5. The view renders a template to display data and returns it with HTTP response.
+
+
+
+                                                              Create project
+
+1. To create virtual environment:
+      -m venv _env
+  To activate:
+      name_env\Scripts\activate
+  If PowerShell - change to cmd: 
+      file - preferences - settings - press the file pic in the upper right corner - add to json file:
+      "terminal.integrated.defaultProfile.windows": "Command Promt"
+2. To create project:
+      django-admin startproject mysite
+  Then go to mysite folder and
+      python manage.py migrate
+  To start the server:
+      python manage.py runserver
+  To start an app inside the project:
+      python manage.py startapp blog
+3. Describe the first model. To make any field of a table to be a PK instead of id set on this field (primary_key=True).
+      Parameter auto_now_add=True saves the date when the object is created
+      Parameter auto_now=True saves the date when the object has been saved.
+  Ordering and indexes should be in Meta class.
+  If you need any enumeration you can define a subclass in your model like this:
+      Class Post(models.Model):
+        class Status(models.TextChoices):
+          DRAFT = "DF", "Draft"
+          PUBLISHED = "PB", "Published"
+  and then use it inside the model class:
+  status = models.Charfield(choices=Status, default=Status.DRAFT)
+4. Register the app in INSTALLED APPS in settings.py like this:
+      'blog.apps.BlogConfig'
+  You shoud add an app into INSTALLED APPS before migration
+5.  python manage.py sqlmigrate blog 001 - returns SQL queries from migrations without executing them.
+    python manage.py makemigrations - commit migrations
+    python manage.py migrate - executes migrations.
+6. Create superuser for adminsite:
+      python manage.py createsuperuser
+7. To make slugs automatically add the following attr to PostAdmin class like this:
+      prepopulated_fields={'slug': ('title',)}
+    where title is the field to slugify.
+
+                                                                              ORM
+
+. get() - method retrieves a single object from db (based on SELECT). 
+Exceptions:
+      - DoesNotExist
+      - MultipleObjectsReturned
+ex.:
+    user = User.objects.get(username='admin')
+. create() - method to describe an object and save it to db:
+        Post.objects.create(title='One more post',
+                      slug='one-more-post',
+                      body='post body',
+                      author=user)
+. to describe an obj without saving it to db:
+        post = Post(title='One more post',
+                      slug='one-more-post',
+                      body='post body',
+                      author=user)
+      and then you can save it:
+            post.save()
+save() uses SQL INSERT
+
+. get_or_create() method fetches an object from db and creates it if it is absent
+
+. to change an attr:
+  post.title = 'new_title'
+  post.save()
+  in this case save() uses the UPDATE SQL
+
+. to retreive all objects from a table use method all()
+    all_posts = Post.objects.all()
+  this queryset isn't executed until it is forced to.
+
+. oder_by() overrides the default ordering defined in Meta class of the Model
+      Post.objects.order_by('title')
+      Post.objects.order_by('-title')
+
+. count() counts total number of objects matching the queryset and returns an int
+      Post.objects.filter(id__lt=3).count()
+      2
+
+. delete() 
+    post = Post.objects.get(id=1)
+    post.delete()
+
+. filter() specifies the content (SQL WHERE clause) by using filed lookups.
+             
+                    LOOKUPS
+- an exact match:
+    Post.objects.filter(id__exact=1)
+    Post.objects.filter(id=1)
+
+- case insensitive lookup:
+    Post.objects.filter(title__iexact='title')
+
+- LIKE lookup
+    Post.objects.filter(title__contains)
+    case insensitive: 
+          Post.objects.filter(title__icontains)
+
+. > < >= <= lookup:
+(id__gt=3) = id > 3
+(id__gte=3) = id >= 3
+(id__lt=3) = id < 3
+(id__lte=3) = id <= 3 
+
+. Q-objects helps you to use AND, OR, XOR logic:
+from django.db.models import Q
+
+starts_who = Q(title__istartswith="who")
+starts_why = Q(title__istartswith="why")
+Post.objects.filter(starts_who|starts_why)
+
+                                                  Custom manager
+Model manager is a class that acts as an interface through which Django models interact with dbs. 
+If no manager is defined in the model Django creates __objects__ default manager. If you declare any custom
+manager and you want to keep objects manager, you have to add it explicitly to your model:
+
+class Post:
+  #model fields
+  #...
+  objects = models.Manager() #default manager
+  published = PublishedManager() #custom manager defined earlier
+
+Then you can use the following notation:
+  Post.published.filter(title__startswith="who")
+
+                                          View
+View is a python function that receives a web request and returns a web response.
+As you define the view you should describe the url for it in a new file urls.py (you have
+to create this file inside the app directory) and then include it into the project urls.py file.
+
+urls.py of the app:
+
+app_name = 'blog'
+
+urlpatterns = [
+      path('', views.post_list, name = 'post_list'),
+      path('<int:id>/', views.post_detail, name = 'post_detail'),
+]
+
+
+urls.py of the project:
+
+urlpatterns = [
+      path(admin...),
+      path('blog/', include('blog.urls', namespace='blog')
+]
+
+
+
+
+
+
+
+
