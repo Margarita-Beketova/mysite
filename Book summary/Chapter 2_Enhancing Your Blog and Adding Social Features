@@ -1,0 +1,62 @@
+To build canonical url for Post objects we can use the post_detail url.
+
+- reverse() builds the url dinamically using the url defined in url patterns.
+
+- get_absolute_url() defines the unique url for the model's object.
+
+To build SEO friendly url for a post we can use slug and publication date. To do so we need to ensure that slugs are unique for publication date. In models.py add unique for date="publish" where publish is the datetime field of the post model. 
+
+-Makemigrations-
+-Migrate-
+
+Then change url patterns to include date and slug instead of post_id and add new parameters to the view and to get_absolute_url func.
+
+                                                    PAGINATION
+
+1. Instantiate the Paginator class with the number of objects per page:
+    paginator = Paginator(post_list, 3)
+2. Retrieve the page HTTP parameter and store it in the variable.
+    page_number = request.GET.get('page', 1)
+3. Obtain objects for the desired page by page() method
+    posts = paginator.page(page_number)
+4. Pass posts (from the previous step) to the template in context. Create pagination.html and include it into list.html at the bottom of the {% content %} block
+5. Handle pagination errors.
+
+                                                 CLASS BASED VIEWS
+
+. CBV helps to organize code related to HTTP methods(GET, POST, PUT) in separate methods instead of if-clause
+
+. it helps to use multiple inheritanse to create reusable view classes(mixins). Mixins helps to factor code into reusable components.
+
+                                            CRAETING FORMS WITH DJANGO
+                                            BASE CLASSES TO BUILD FORMS
+
+- Form - allows to build standart form by defining fields and validations
+
+- ModelForm - allows to build form tied to model instances. Form fields can be explicitly declared or generated automatically from model fields. Forms should be defined in separated file forms.py of the app directory.
+
+                                            SENDING EMAILS WITH DJANGO
+
+To send emails you need SMTP server(mail transfer protocol). You can use gmail.
+To separate config from code can be used python-decouple - the library that simplifies the use of env. variable.
+EMAIL_HOST_PASSWORD is generated in google account settings as app password. Add this password to env. file. Then you can describe the email sending logic in the view, add the url pattern and the the template.
+
+                                                COMMENTS SYSTEM
+
+1. Create a model for comments(do not forget to makemigrations and migrate it)
+
+2. Add the comment model to the admin site to manage comments. 
+
+3. Create form from model
+
+4. Craeate a view to handle ModelForm of comments(to catch it save to db) using decorator @required_POST
+    - save(commit=False) creates model instance but doesn't save it to db. Object can be modified before db.
+    - save() saves to db
+
+5. Create a url pattern for the view
+
+6. Create template for the comment form
+
+7. Add comments to the post_detail view
+
+8. Add comments to the post detail template
